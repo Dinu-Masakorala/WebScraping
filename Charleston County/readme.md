@@ -1,4 +1,5 @@
 Property Deed & Tax Info Scraper
+
 This project automates the extraction of property deed book/page numbers and tax information from a public website using Selenium. It handles CAPTCHAs, stale elements, PDF downloads, and errors via screenshots for debugging.
 
 📂 Features
