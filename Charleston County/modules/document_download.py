@@ -3,12 +3,14 @@ import base64
 import time
 import random
 import requests
+from selenium.webdriver.chrome.options import Options
 from config import DEED_SEARCH_URL
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from datetime import datetime
+from selenium import webdriver
 
 def take_screenshot(driver, step_name, folder_path):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -23,9 +25,28 @@ def handle_captcha_if_present(driver, wait_time=5):
         WebDriverWait(driver, wait_time).until(
             EC.presence_of_element_located((By.XPATH, "//iframe[contains(@src, 'recaptcha')]"))
         )
-        print("⚠️ CAPTCHA detected! Please solve it in the browser window...")
-        input("👉 Press Enter **AFTER** you solve the CAPTCHA to continue...")
+        print("⚠️ CAPTCHA detected! Launching non-headless window...")
+
+        # Get current URL to reopen
+        current_url = driver.current_url
+
+        # Launch temporary non-headless browser
+        options = Options()
+        options.headless = False
+        temp_driver = webdriver.Chrome(options=options)
+        temp_driver.get(current_url)
+
+        print("👉 Please solve the CAPTCHA in the newly opened window.")
+        input("✅ Press Enter AFTER solving the CAPTCHA to continue...")
+
+        # Close the temporary browser after CAPTCHA is solved
+        temp_driver.quit()
+
+        # Revisit the page on the headless driver to continue
+        driver.get(current_url)
+
     except TimeoutException:
+        # No CAPTCHA present; continue normally
         pass
 
 def process_deed_pdfs(driver, wait, book_numbers, page_numbers, folder_path):
